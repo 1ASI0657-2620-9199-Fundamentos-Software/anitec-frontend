@@ -17,6 +17,10 @@ export class Animal {
         weight = 0,
         status = "Saludable",
         herdId = null,
+        corralId = null,
+        source = null,
+        ageRange = null,
+        imageUrl = null,
     }) {
         this.id = id;
         this.tag = tag;
@@ -27,11 +31,20 @@ export class Animal {
         this.birthDate = birthDate || null;
         this.weight = Number(weight);
         this.status = status;
+        this.source = source || null;
+        this.ageRange = ageRange || null;
+        this.imageUrl = imageUrl || null;
 
         if (herdId) {
             this.herdId = Number(herdId);
         } else {
             this.herdId = null;
+        }
+
+        if (corralId) {
+            this.corralId = Number(corralId);
+        } else {
+            this.corralId = null;
         }
     }
 }

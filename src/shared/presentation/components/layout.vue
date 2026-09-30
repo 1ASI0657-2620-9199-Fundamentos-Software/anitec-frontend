@@ -21,6 +21,7 @@ const rancherItems = [
     icon: "pi pi-warehouse",
   },
   { label: "option.herds", to: "/livestock/herds", icon: "pi pi-map-marker" },
+  { label: "option.corrals", to: "/livestock/corrals", icon: "pi pi-stop" },
   { label: "option.animals", to: "/livestock/animals", icon: "pi pi-id-card" },
   {
     label: "option.health",

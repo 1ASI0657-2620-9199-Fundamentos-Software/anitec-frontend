@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { LivestockApi } from "../infrastructure/livestock-api.js";
 import { AnimalAssembler } from "../infrastructure/animal.assembler.js";
 import { HerdAssembler } from "../infrastructure/herd.assembler.js";
+import { CorralAssembler } from "../infrastructure/corral.assembler.js";
 import useIamStore from "../../iam/application/iam.store.js";
 
 const api = new LivestockApi();
@@ -16,6 +17,8 @@ const useLivestockStore = defineStore("livestock", () => {
     const animals = ref([]);
 
     const herds = ref([]);
+
+    const corrals = ref([]);
 
     const errors = ref([]);
 
@@ -59,6 +62,19 @@ const useLivestockStore = defineStore("livestock", () => {
             .getHerds()
             .then((response) => {
                 herds.value = HerdAssembler.toEntitiesFromResponse(response);
+            })
+            .catch((error) => errors.value.push(error));
+    }
+
+    /**
+     * Loads corrals from the API.
+     * @returns {Promise}
+     */
+    function fetchCorrals() {
+        return api
+            .getCorrals()
+            .then((response) => {
+                corrals.value = CorralAssembler.toEntitiesFromResponse(response);
             })
             .catch((error) => errors.value.push(error));
     }
@@ -252,6 +268,75 @@ const useLivestockStore = defineStore("livestock", () => {
     }
 
     /**
+     * Finds a corral by its identifier.
+     * @param {number|string} id Corral identifier.
+     * @returns {Object|null}
+     */
+    function getCorralById(id) {
+        let selectedCorral = null;
+
+        for (let i = 0; i < corrals.value.length; i++) {
+            const corral = corrals.value[i];
+
+            if (Number(corral.id) === Number(id)) {
+                selectedCorral = corral;
+            }
+        }
+
+        return selectedCorral;
+    }
+
+    /**
+     * Returns the corral name using its identifier.
+     * @param {number|string} corralId Corral identifier.
+     * @returns {string}
+     */
+    function getCorralName(corralId) {
+        if (!corralId) return "Sin corral";
+
+        let corralName = "Sin corral";
+
+        for (let i = 0; i < corrals.value.length; i++) {
+            const corral = corrals.value[i];
+
+            if (Number(corral.id) === Number(corralId)) {
+                corralName = corral.name;
+            }
+        }
+
+        return corralName;
+    }
+
+    /**
+     * Filters corrals that belong to a herd.
+     * @param {number|string} herdId Herd identifier.
+     * @returns {Object[]}
+     */
+    function getCorralsByHerdId(herdId) {
+        const herdCorrals = [];
+
+        corrals.value.forEach((corral) => {
+            if (Number(corral.herdId) === Number(herdId)) {
+                herdCorrals.push(corral);
+            }
+        });
+
+        return herdCorrals;
+    }
+
+    function getAnimalCountByCorral(corralId) {
+        let total = 0;
+
+        animals.value.forEach((animal) => {
+            if (Number(animal.corralId) === Number(corralId)) {
+                total++;
+            }
+        });
+
+        return total;
+    }
+
+    /**
      * Registers a new animal and updates the local list.
      * @param {Object} animal Animal data.
      * @returns {Promise}
@@ -325,6 +410,101 @@ const useLivestockStore = defineStore("livestock", () => {
                 animals.value = newAnimals;
             })
             .catch((error) => errors.value.push(error));
+    }
+
+    /**
+     * Registers many animals at once inside a corral and updates the local list.
+     * @param {Object} payload {species, breed, gender, birthDate, weight, status, herdId, corralId, quantity}.
+     * @returns {Promise<boolean>}
+     */
+    function addAnimalsBulk(payload) {
+        return api
+            .createAnimalsBulk(payload)
+            .then((response) => {
+                response.data.forEach((resource) => {
+                    animals.value.push(AnimalAssembler.toEntityFromResource(resource));
+                });
+                errors.value = [];
+                return true;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                return false;
+            });
+    }
+
+    /**
+     * Updates the status of many animals at once (e.g. marking them as sold).
+     * @param {number[]} animalIds Selected animal identifiers.
+     * @param {string} status New status to apply.
+     * @returns {Promise<boolean>}
+     */
+    function updateAnimalsStatusBulk(animalIds, status) {
+        return api
+            .updateAnimalsStatusBulk({ animalIds, status })
+            .then((response) => {
+                response.data.forEach((resource) => {
+                    const updated = AnimalAssembler.toEntityFromResource(resource);
+
+                    let index = -1;
+
+                    for (let i = 0; i < animals.value.length; i++) {
+                        const item = animals.value[i];
+
+                        if (Number(item.id) === Number(updated.id)) {
+                            index = i;
+                        }
+                    }
+
+                    if (index !== -1) animals.value[index] = updated;
+                });
+                errors.value = [];
+                return true;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                return false;
+            });
+    }
+
+    /**
+     * Uploads an animal photo and returns the relative URL saved by the backend.
+     * @param {File} file Image file selected by the user.
+     * @returns {Promise<string|null>}
+     */
+    function uploadAnimalImage(file) {
+        return api
+            .uploadAnimalImage(file)
+            .then((response) => {
+                errors.value = [];
+                return response.data.url;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                return null;
+            });
+    }
+
+    /**
+     * Deletes many animals at once and removes them from local state.
+     * @param {number[]} animalIds Selected animal identifiers.
+     * @returns {Promise<boolean>}
+     */
+    function deleteAnimalsBulk(animalIds) {
+        return api
+            .deleteAnimalsBulk({ animalIds })
+            .then(() => {
+                const ids = animalIds.map((id) => Number(id));
+                animals.value = animals.value.filter(
+                    (animal) => !ids.includes(Number(animal.id)),
+                );
+                errors.value = [];
+                return true;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                return false;
+            });
     }
 
     /**
@@ -403,15 +583,93 @@ const useLivestockStore = defineStore("livestock", () => {
             .catch((error) => errors.value.push(error));
     }
 
+    /**
+     * Registers a new corral and updates the local list.
+     * @param {Object} corral Corral data.
+     * @returns {Promise<boolean>}
+     */
+    function addCorral(corral) {
+        return api
+            .createCorral(corral)
+            .then((response) => {
+                corrals.value.push(
+                    CorralAssembler.toEntityFromResource(response.data),
+                );
+                errors.value = [];
+                return true;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                return false;
+            });
+    }
+
+    /**
+     * Updates corral data.
+     * @param {Object} corral Updated corral data.
+     * @returns {Promise<boolean>}
+     */
+    function updateCorral(corral) {
+        return api
+            .updateCorral(corral)
+            .then((response) => {
+                const updated = CorralAssembler.toEntityFromResource(
+                    response.data,
+                );
+
+                let index = -1;
+
+                for (let i = 0; i < corrals.value.length; i++) {
+                    const item = corrals.value[i];
+
+                    if (Number(item.id) === Number(updated.id)) {
+                        index = i;
+                    }
+                }
+
+                if (index !== -1) corrals.value[index] = updated;
+                errors.value = [];
+                return true;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                return false;
+            });
+    }
+
+    /**
+     * Deletes a corral and removes it from local state.
+     * @param {Object} corral Selected corral.
+     * @returns {Promise}
+     */
+    function deleteCorral(corral) {
+        return api
+            .deleteCorral(corral.id)
+            .then(() => {
+                const newCorrals = [];
+
+                corrals.value.forEach((item) => {
+                    if (Number(item.id) !== Number(corral.id)) {
+                        newCorrals.push(item);
+                    }
+                });
+
+                corrals.value = newCorrals;
+            })
+            .catch((error) => errors.value.push(error));
+    }
+
     return {
         animals,
         herds,
+        corrals,
         errors,
         loaded,
         animalCount,
         healthyCount,
         fetchAnimals,
         fetchHerds,
+        fetchCorrals,
         getAnimalById,
         getHerdName,
         getRancherById,
@@ -423,12 +681,23 @@ const useLivestockStore = defineStore("livestock", () => {
         getAnimalsByVeterinarianId,
         getHerdById,
         getAnimalCountByHerd,
+        getCorralById,
+        getCorralName,
+        getCorralsByHerdId,
+        getAnimalCountByCorral,
         addAnimal,
         updateAnimal,
         deleteAnimal,
+        addAnimalsBulk,
+        updateAnimalsStatusBulk,
+        deleteAnimalsBulk,
+        uploadAnimalImage,
         addHerd,
         updateHerd,
         deleteHerd,
+        addCorral,
+        updateCorral,
+        deleteCorral,
     };
 });
 

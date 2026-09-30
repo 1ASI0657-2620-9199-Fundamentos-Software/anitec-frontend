@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, toRefs } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, toRefs } from "vue";
 import { useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
@@ -15,6 +15,33 @@ const confirm = useConfirm();
 const store = useFinancialStore();
 const iam = useIamStore();
 const { loaded, errors } = toRefs(store);
+
+const mobileQuery = window.matchMedia("(max-width: 720px)");
+
+const isMobile = ref(mobileQuery.matches);
+
+const updateIsMobile = (event) => {
+  isMobile.value = event.matches;
+};
+
+onMounted(() => mobileQuery.addEventListener("change", updateIsMobile));
+
+onBeforeUnmount(() =>
+  mobileQuery.removeEventListener("change", updateIsMobile),
+);
+
+const detailVisible = ref(false);
+
+const detailRecord = ref(null);
+
+/**
+ * Opens the floating card with the full data of the selected transaction.
+ * @param {Object} record Selected record.
+ */
+const openDetail = (record) => {
+  detailRecord.value = record;
+  detailVisible.value = true;
+};
 
 onMounted(() => {
   if (!store.loaded) store.fetchRecords();
@@ -89,6 +116,7 @@ const confirmDelete = (record) =>
       paginator
       :rows="8"
       striped-rows
+      class="financial-list-table"
     >
       <pv-column field="type" :header="t('finance.type')"
         ><template #body="slotProps"
@@ -102,10 +130,26 @@ const confirmDelete = (record) =>
           >S/ {{ slotProps.data.amount }}</template
         ></pv-column
       >
-      <pv-column field="date" :header="t('finance.date')" sortable />
-      <pv-column field="description" :header="t('finance.description')" />
+      <pv-column
+        v-if="!isMobile"
+        field="date"
+        :header="t('finance.date')"
+        sortable
+      />
+      <pv-column
+        v-if="!isMobile"
+        field="description"
+        :header="t('finance.description')"
+      />
       <pv-column :header="t('common.actions')">
         <template #body="slotProps">
+          <pv-button
+            v-tooltip="t('finance.viewDetail')"
+            icon="pi pi-info-circle"
+            rounded
+            text
+            @click="openDetail(slotProps.data)"
+          />
           <pv-button
             icon="pi pi-pencil"
             rounded
@@ -131,5 +175,30 @@ const confirmDelete = (record) =>
       No hay movimientos financieros registrados.
     </p>
     <p v-if="errors.length" class="error-text">{{ t("common.errors") }}</p>
+
+    <pv-dialog
+      v-model:visible="detailVisible"
+      modal
+      :header="t('finance.detailTitle')"
+      :style="{ width: '28rem' }"
+    >
+      <dl v-if="detailRecord" class="animal-detail-grid">
+        <dt>{{ t("finance.type") }}</dt>
+        <dd>
+          <pv-tag
+            :value="detailRecord.type"
+            :severity="severityFor(detailRecord.type)"
+          />
+        </dd>
+        <dt>{{ t("finance.category") }}</dt>
+        <dd>{{ detailRecord.category }}</dd>
+        <dt>{{ t("finance.amount") }}</dt>
+        <dd>S/ {{ detailRecord.amount }}</dd>
+        <dt>{{ t("finance.date") }}</dt>
+        <dd>{{ detailRecord.date || "-" }}</dd>
+        <dt>{{ t("finance.description") }}</dt>
+        <dd>{{ detailRecord.description || "-" }}</dd>
+      </dl>
+    </pv-dialog>
   </div>
 </template>

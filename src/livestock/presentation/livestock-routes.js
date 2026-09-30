@@ -6,6 +6,10 @@ const herdList = () => import("./views/herd-list.vue");
 
 const herdForm = () => import("./views/herd-form.vue");
 
+const corralList = () => import("./views/corral-list.vue");
+
+const corralForm = () => import("./views/corral-form.vue");
+
 const livestockRoutes = [
     {
         path: "herds",
@@ -24,6 +28,24 @@ const livestockRoutes = [
         name: "livestock-herd-edit",
         component: herdForm,
         meta: { title: "Editar finca", roles: ["rancher"] },
+    },
+    {
+        path: "corrals",
+        name: "livestock-corrals",
+        component: corralList,
+        meta: { title: "Corrales", roles: ["rancher", "veterinarian"] },
+    },
+    {
+        path: "corrals/new",
+        name: "livestock-corral-new",
+        component: corralForm,
+        meta: { title: "Nuevo corral", roles: ["rancher"] },
+    },
+    {
+        path: "corrals/:id/edit",
+        name: "livestock-corral-edit",
+        component: corralForm,
+        meta: { title: "Editar corral", roles: ["rancher"] },
     },
     {
         path: "animals",
