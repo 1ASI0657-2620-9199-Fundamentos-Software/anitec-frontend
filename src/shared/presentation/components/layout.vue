@@ -20,6 +20,11 @@ const rancherItems = [
     to: "/rancher/dashboard",
     icon: "pi pi-warehouse",
   },
+  {
+    label: "option.requests",
+    to: "/rancher/veterinarian-requests",
+    icon: "pi pi-user-plus",
+  },
   { label: "option.herds", to: "/livestock/herds", icon: "pi pi-map-marker" },
   { label: "option.corrals", to: "/livestock/corrals", icon: "pi pi-stop" },
   { label: "option.animals", to: "/livestock/animals", icon: "pi pi-id-card" },

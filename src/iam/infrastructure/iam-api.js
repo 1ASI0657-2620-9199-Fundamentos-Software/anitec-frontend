@@ -62,4 +62,37 @@ export class IamApi extends BaseApi {
             `/veterinarian/${veterinarianId}/clients/${rancherId}`,
         );
     }
+
+    /**
+     * Lists the access requests that veterinarians sent to a rancher.
+     * @param {number|string} rancherId Rancher identifier.
+     * @returns {Promise}
+     */
+    getRancherRequests(rancherId) {
+        return this.http.get(`/rancher/${rancherId}/veterinarian-requests`);
+    }
+
+    /**
+     * The rancher approves a veterinarian request.
+     * @param {number|string} rancherId Rancher identifier.
+     * @param {number|string} veterinarianId Veterinarian identifier.
+     * @returns {Promise}
+     */
+    approveVeterinarianRequest(rancherId, veterinarianId) {
+        return this.http.patch(
+            `/rancher/${rancherId}/veterinarian-requests/${veterinarianId}/approve`,
+        );
+    }
+
+    /**
+     * The rancher rejects a request or revokes an approved access.
+     * @param {number|string} rancherId Rancher identifier.
+     * @param {number|string} veterinarianId Veterinarian identifier.
+     * @returns {Promise}
+     */
+    rejectVeterinarianRequest(rancherId, veterinarianId) {
+        return this.http.patch(
+            `/rancher/${rancherId}/veterinarian-requests/${veterinarianId}/reject`,
+        );
+    }
 }
