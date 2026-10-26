@@ -25,6 +25,16 @@ onMounted(async () => {
 
 const clients = computed(() => livestock.getAssignedRanchers());
 
+const pendingClients = computed(() => iam.pendingClients);
+
+/**
+ * Cancels a request that the rancher has not answered yet.
+ * @param {Object} client Pending request.
+ */
+const cancelRequest = async (client) => {
+  await iam.unassignRancherFromVeterinarian(client.id);
+};
+
 const herdsByClient = (clientId) => livestock.getHerdsByOwnerId(clientId);
 
 const animalsByClient = (clientId) => livestock.getAnimalsByOwnerId(clientId);
@@ -219,5 +229,33 @@ const alertSeverity = (clientId) => {
     <p v-if="!clients.length" class="empty-state">
       {{ t("veterinary.noAssignedClients") }}
     </p>
+
+    <div v-if="pendingClients.length" class="pending-requests">
+      <h3>{{ t("requests.pendingTitle") }}</h3>
+      <div class="assigned-client-grid">
+        <article
+          v-for="client in pendingClients"
+          :key="client.id"
+          class="assigned-client-card"
+        >
+          <header>
+            <div>
+              <span>{{ t("veterinary.rancher") }}</span>
+              <h3>{{ client.fullName }}</h3>
+            </div>
+            <pv-tag :value="t('requests.waiting')" severity="warn" />
+          </header>
+          <footer>
+            <pv-button
+              :label="t('requests.cancel')"
+              icon="pi pi-times"
+              severity="secondary"
+              outlined
+              @click="cancelRequest(client)"
+            />
+          </footer>
+        </article>
+      </div>
+    </div>
   </section>
 </template>

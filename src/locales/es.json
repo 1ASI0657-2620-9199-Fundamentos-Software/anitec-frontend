@@ -18,6 +18,7 @@
     "subscriptions": "Planes",
     "clients": "Clientes",
     "patients": "Pacientes",
+    "requests": "Solicitudes",
     "about": "Acerca de"
   },
   "home": {
@@ -248,6 +249,27 @@
     "owner": "Ganadero",
     "herd": "Hato",
     "location": "Ubicacion"
+  },
+  "requests": {
+    "chip": "Acceso a tus datos",
+    "title": "Solicitudes de veterinarios",
+    "subtitle": "Decide que veterinarios pueden ver tus fincas, animales e historial clinico. Sin tu aprobacion no ven nada.",
+    "veterinarian": "Veterinario",
+    "requestedOn": "Solicitado el {date}",
+    "acceptedOn": "Aprobado el {date}",
+    "status": {
+      "Pending": "Pendiente",
+      "Accepted": "Aprobado",
+      "Rejected": "Rechazado"
+    },
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "revoke": "Revocar acceso",
+    "empty": "No has recibido solicitudes de veterinarios.",
+    "sent": "Solicitud enviada. El ganadero debe aprobarla antes de que veas sus datos.",
+    "waiting": "Esperando aprobacion",
+    "pendingTitle": "Solicitudes pendientes de aprobacion",
+    "cancel": "Cancelar solicitud"
   },
   "finance": {
     "title": "Gestion financiera",

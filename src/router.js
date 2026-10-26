@@ -16,6 +16,9 @@ const rancherDashboard = () =>
 const veterinarianDashboard = () =>
     import("./shared/presentation/views/veterinarian-dashboard.vue");
 
+const ranchersRequests = () =>
+    import("./shared/presentation/views/rancher-veterinarian-requests.vue");
+
 const veterinaryClients = () =>
     import("./shared/presentation/views/veterinary-clients.vue");
 
@@ -53,6 +56,16 @@ const routes = [
         name: "rancher-dashboard",
         component: rancherDashboard,
         meta: { title: "Dashboard Ganadero", roles: ["rancher"] },
+    },
+    {
+        path: "/rancher/veterinarian-requests",
+        name: "rancher-veterinarian-requests",
+        component: ranchersRequests,
+        meta: {
+            title: "Solicitudes de veterinarios",
+            titleKey: "requests.title",
+            roles: ["rancher"],
+        },
     },
     {
         path: "/veterinarian/dashboard",

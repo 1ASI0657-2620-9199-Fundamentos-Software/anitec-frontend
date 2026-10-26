@@ -17,6 +17,9 @@ const search = ref("");
 
 const availableRanchers = ref([]);
 
+/** Message shown after sending an access request. */
+const requestNotice = ref("");
+
 onMounted(async () => {
   await iam.fetchVeterinarianClients();
   availableRanchers.value = await iam.fetchAvailableRanchers();
@@ -90,8 +93,11 @@ const isAssignedToCurrentVet = (rancher) =>
 
 const herdsByRancher = (rancherId) => livestock.getHerdsByOwnerId(rancherId);
 
-const animalCountByRancher = (rancherId) =>
-  livestock.getAnimalsByOwnerId(rancherId).length;
+const animalCountByRancher = (rancher) => {
+  if (rancher.animalCount !== undefined) return rancher.animalCount;
+
+  return livestock.getAnimalsByOwnerId(rancher.id).length;
+};
 
 /**
  * Adds a rancher to the veterinarian portfolio.
@@ -101,6 +107,7 @@ const sendRequest = async (rancher) => {
   const assigned = await iam.assignRancherToVeterinarian(rancher.id);
 
   if (assigned) {
+    requestNotice.value = t("requests.sent");
     availableRanchers.value = await iam.fetchAvailableRanchers();
   }
 };
@@ -122,6 +129,10 @@ const sendRequest = async (rancher) => {
         @click="router.push('/veterinary/clients')"
       />
     </div>
+
+    <p v-if="requestNotice" class="empty-state" role="status">
+      {{ requestNotice }}
+    </p>
 
     <div class="client-discovery-toolbar">
       <span class="p-input-icon-left">
@@ -148,7 +159,7 @@ const sendRequest = async (rancher) => {
             <h3>{{ rancher.fullName }}</h3>
             <span
               >{{ herdsByRancher(rancher.id).length }} {{ t("veterinary.farms").toLowerCase() }} -
-              {{ animalCountByRancher(rancher.id) }} {{ t("veterinary.animals").toLowerCase() }}</span
+              {{ animalCountByRancher(rancher) }} {{ t("veterinary.animals").toLowerCase() }}</span
             >
           </div>
         </div>
