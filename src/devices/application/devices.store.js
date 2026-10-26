@@ -38,6 +38,24 @@ const useDevicesStore = defineStore("devices", () => {
             });
     }
 
+    /**
+     * Issues or rotates the API key of a device.
+     * @param {number|string} deviceId Device identifier.
+     * @returns {Promise<{apiKey: string, header: string}|null>}
+     */
+    function issueApiKey(deviceId) {
+        return api
+            .issueApiKey(deviceId)
+            .then((response) => ({
+                apiKey: response.data.apiKey,
+                header: response.data.header,
+            }))
+            .catch((error) => {
+                errors.value.push(error);
+                return null;
+            });
+    }
+
     function fetchDeviceMetrics(deviceId) {
         return api
             .getMetricsByDevice(deviceId)
@@ -148,6 +166,7 @@ const useDevicesStore = defineStore("devices", () => {
         fetchDevices,
         fetchDeviceMetrics,
         fetchLatestMetric,
+        issueApiKey,
         getDeviceById,
         addDevice,
         updateDevice,

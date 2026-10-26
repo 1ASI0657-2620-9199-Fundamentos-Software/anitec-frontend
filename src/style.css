@@ -1649,3 +1649,19 @@ p {
     table-layout: fixed;
   }
 }
+
+/* API key shown once after it is issued to a device */
+.api-key-box {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px dashed currentColor;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.api-key-box code {
+  font-size: 0.85rem;
+  word-break: break-all;
+}

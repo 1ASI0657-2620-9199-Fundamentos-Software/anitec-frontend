@@ -311,6 +311,13 @@
     "upcomingActivities": "Actividades proximas"
   },
   "iot": {
+    "apiKeyGenerate": "Clave de API",
+    "apiKeyTitle": "Clave de API del dispositivo",
+    "apiKeyConfirm": "Se generara una clave nueva para {name}. La clave anterior dejara de funcionar. Quieres continuar?",
+    "apiKeyOnce": "Copia esta clave ahora: no se mostrara de nuevo.",
+    "apiKeyHeader": "El dispositivo la envia en el encabezado {header} al registrar lecturas.",
+    "apiKeyCopy": "Copiar clave",
+    "apiKeyCopied": "Clave copiada",
     "title": "Dispositivos IoT",
     "subtitle": "Lecturas basicas de sensores asociados a fincas o animales de ganado.",
     "new": "Agregar dispositivo",
