@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useConfirm } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
@@ -99,6 +99,42 @@ const statusSeverity = (status) => {
 
 const canManageDevices = computed(() => iam.currentRole === "rancher");
 
+/** API keys issued in this session, by device. The server never returns them again. */
+const issuedKeys = ref({});
+
+const copiedDeviceId = ref(null);
+
+/**
+ * Issues or rotates the API key of a device and shows it once.
+ * @param {Object} device Selected device.
+ */
+const generateApiKey = async (device) => {
+  const result = await devicesStore.issueApiKey(device.id);
+
+  if (result) {
+    issuedKeys.value = { ...issuedKeys.value, [device.id]: result };
+    copiedDeviceId.value = null;
+  }
+};
+
+const confirmRotate = (device) => {
+  confirm.require({
+    message: t("iot.apiKeyConfirm", { name: device.name }),
+    header: t("iot.apiKeyTitle"),
+    icon: "pi pi-key",
+    accept: () => generateApiKey(device),
+  });
+};
+
+const copyKey = async (device) => {
+  try {
+    await navigator.clipboard.writeText(issuedKeys.value[device.id].apiKey);
+    copiedDeviceId.value = device.id;
+  } catch {
+    copiedDeviceId.value = null;
+  }
+};
+
 const confirmDelete = (device) => {
   confirm.require({
     message: t("iot.confirmDelete", { name: device.name }),
@@ -174,7 +210,26 @@ const confirmDelete = (device) => {
           </div>
         </dl>
 
+        <div v-if="issuedKeys[device.id]" class="api-key-box" role="status">
+          <strong>{{ t("iot.apiKeyOnce") }}</strong>
+          <code>{{ issuedKeys[device.id].apiKey }}</code>
+          <small>{{ t("iot.apiKeyHeader", { header: issuedKeys[device.id].header }) }}</small>
+          <pv-button
+            :label="copiedDeviceId === device.id ? t('iot.apiKeyCopied') : t('iot.apiKeyCopy')"
+            icon="pi pi-copy"
+            size="small"
+            outlined
+            @click="copyKey(device)"
+          />
+        </div>
+
         <footer v-if="canManageDevices">
+          <pv-button
+            :label="t('iot.apiKeyGenerate')"
+            icon="pi pi-key"
+            outlined
+            @click="confirmRotate(device)"
+          />
           <pv-button
             :label="t('common.edit')"
             icon="pi pi-pencil"

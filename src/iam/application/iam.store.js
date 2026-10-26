@@ -148,6 +148,12 @@ const useIamStore = defineStore("iam", () => {
 
     const errors = ref([]);
 
+    /** Requests a veterinarian sent and that the rancher has not accepted yet. */
+    const pendingClients = ref([]);
+
+    /** Requests a rancher received from veterinarians (any status). */
+    const rancherRequests = ref([]);
+
     const users = computed(() => demoUsers.value);
 
     const isSignedIn = computed(() => {
@@ -203,7 +209,8 @@ const useIamStore = defineStore("iam", () => {
     }
 
     /**
-     * Synchronizes veterinarian clients from the backend.
+     * Synchronizes veterinarian clients from the backend. Only ranchers that accepted the
+     * veterinarian are treated as clients; the rest are kept as pending requests.
      * @param {number|string} veterinarianId Veterinarian identifier.
      * @returns {Promise<Object[]>}
      */
@@ -212,7 +219,25 @@ const useIamStore = defineStore("iam", () => {
             .getVeterinarianClients(veterinarianId)
             .then((response) => {
                 const clientIds = [];
-                const clients = getResponseList(response).map((client) => {
+                const allClients = getResponseList(response);
+
+                pendingClients.value = allClients
+                    .filter(
+                        (client) =>
+                            String(client.status).toLowerCase() === "pending",
+                    )
+                    .map((client) => ({
+                        id: Number(client.rancherId),
+                        fullName: client.rancherName || `Ganadero ${client.rancherId}`,
+                        requestedAt: client.requestedAt,
+                    }));
+
+                const clients = allClients
+                    .filter(
+                        (client) =>
+                            String(client.status).toLowerCase() === "accepted",
+                    )
+                    .map((client) => {
                     const rancherId = Number(client.rancherId);
 
                     clientIds.push(rancherId);
@@ -276,6 +301,8 @@ const useIamStore = defineStore("iam", () => {
                     ...toUserFromResource(resource),
                     role: "rancher",
                     veterinarianId: null,
+                    herdCount: resource.herds,
+                    animalCount: resource.animals,
                 }));
                 const usersById = new Map();
 
@@ -418,7 +445,8 @@ const useIamStore = defineStore("iam", () => {
     }
 
     /**
-     * Assigns a rancher to a veterinarian portfolio.
+     * Sends an access request to a rancher. The rancher must approve it before the
+     * veterinarian can see any data, so the rancher is not added to the portfolio yet.
      * @param {number|string} rancherId Rancher identifier.
      * @param {number|string} veterinarianId Veterinarian identifier.
      * @returns {Promise<boolean>}
@@ -434,42 +462,66 @@ const useIamStore = defineStore("iam", () => {
             return false;
         }
 
-        let rancherIndex = -1;
+        await fetchVeterinarianClients(veterinarianId);
+        return true;
+    }
 
-        for (let i = 0; i < demoUsers.value.length; i++) {
-            const user = demoUsers.value[i];
+    /**
+     * Loads the access requests received by the current rancher.
+     * @param {number|string} rancherId Rancher identifier.
+     * @returns {Promise<Object[]>}
+     */
+    function fetchRancherRequests(rancherId = currentUserId.value) {
+        return api
+            .getRancherRequests(rancherId)
+            .then((response) => {
+                rancherRequests.value = getResponseList(response);
+                return rancherRequests.value;
+            })
+            .catch((error) => {
+                errors.value.push(error);
+                rancherRequests.value = [];
+                return [];
+            });
+    }
 
-            if (
-                user.role === "rancher" &&
-                Number(user.id) === Number(rancherId)
-            ) {
-                rancherIndex = i;
-            }
-        }
-
-        let veterinarian = null;
-
-        for (let i = 0; i < demoUsers.value.length; i++) {
-            const user = demoUsers.value[i];
-
-            if (
-                user.role === "veterinarian" &&
-                Number(user.id) === Number(veterinarianId)
-            ) {
-                veterinarian = user;
-            }
-        }
-
-        if (rancherIndex === -1) {
+    /**
+     * The rancher approves the request of a veterinarian.
+     * @param {number|string} veterinarianId Veterinarian identifier.
+     * @returns {Promise<boolean>}
+     */
+    async function approveVeterinarianRequest(veterinarianId) {
+        try {
+            await api.approveVeterinarianRequest(
+                currentUserId.value,
+                veterinarianId,
+            );
+        } catch (error) {
+            errors.value.push(error);
             return false;
         }
 
-        if (!veterinarian) {
+        await fetchRancherRequests();
+        return true;
+    }
+
+    /**
+     * The rancher rejects a request or revokes the access of a veterinarian.
+     * @param {number|string} veterinarianId Veterinarian identifier.
+     * @returns {Promise<boolean>}
+     */
+    async function rejectVeterinarianRequest(veterinarianId) {
+        try {
+            await api.rejectVeterinarianRequest(
+                currentUserId.value,
+                veterinarianId,
+            );
+        } catch (error) {
+            errors.value.push(error);
             return false;
         }
 
-        demoUsers.value[rancherIndex].veterinarianId = veterinarian.id;
-        saveDemoUsers(demoUsers.value);
+        await fetchRancherRequests();
         return true;
     }
 
@@ -504,10 +556,13 @@ const useIamStore = defineStore("iam", () => {
             }
         }
 
-        if (rancherIndex === -1) return false;
+        if (rancherIndex !== -1) {
+            demoUsers.value[rancherIndex].veterinarianId = null;
+            saveDemoUsers(demoUsers.value);
+        }
 
-        demoUsers.value[rancherIndex].veterinarianId = null;
-        saveDemoUsers(demoUsers.value);
+        // Also refreshes the pending requests when the veterinarian cancels one.
+        await fetchVeterinarianClients(veterinarianId);
         return true;
     }
 
@@ -539,6 +594,11 @@ const useIamStore = defineStore("iam", () => {
         fetchUsers,
         fetchVeterinarianClients,
         fetchAvailableRanchers,
+        fetchRancherRequests,
+        approveVeterinarianRequest,
+        rejectVeterinarianRequest,
+        pendingClients,
+        rancherRequests,
         signUp,
         signIn,
         signOut,

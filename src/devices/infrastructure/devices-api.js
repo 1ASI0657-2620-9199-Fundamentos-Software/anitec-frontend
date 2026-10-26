@@ -35,6 +35,15 @@ export class DevicesApi extends BaseApi {
         return this.#devicesEndpoint.delete(id);
     }
 
+    /**
+     * Issues or rotates the API key of a device. The key is returned only once.
+     * @param {number|string} deviceId Device identifier.
+     * @returns {Promise}
+     */
+    issueApiKey(deviceId) {
+        return this.http.post(`${devicesEndpointPath}/${deviceId}/api-key`);
+    }
+
     /** @param {number|string} deviceId Device identifier. @returns {Promise} */
     getMetricsByDevice(deviceId) {
         return this.http.get(`${devicesEndpointPath}/${deviceId}/metrics`);

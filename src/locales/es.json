@@ -18,6 +18,7 @@
     "subscriptions": "Planes",
     "clients": "Clientes",
     "patients": "Pacientes",
+    "requests": "Solicitudes",
     "about": "Acerca de"
   },
   "home": {
@@ -249,6 +250,27 @@
     "herd": "Hato",
     "location": "Ubicacion"
   },
+  "requests": {
+    "chip": "Acceso a tus datos",
+    "title": "Solicitudes de veterinarios",
+    "subtitle": "Decide que veterinarios pueden ver tus fincas, animales e historial clinico. Sin tu aprobacion no ven nada.",
+    "veterinarian": "Veterinario",
+    "requestedOn": "Solicitado el {date}",
+    "acceptedOn": "Aprobado el {date}",
+    "status": {
+      "Pending": "Pendiente",
+      "Accepted": "Aprobado",
+      "Rejected": "Rechazado"
+    },
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "revoke": "Revocar acceso",
+    "empty": "No has recibido solicitudes de veterinarios.",
+    "sent": "Solicitud enviada. El ganadero debe aprobarla antes de que veas sus datos.",
+    "waiting": "Esperando aprobacion",
+    "pendingTitle": "Solicitudes pendientes de aprobacion",
+    "cancel": "Cancelar solicitud"
+  },
   "finance": {
     "title": "Gestion financiera",
     "new": "Nuevo movimiento",
@@ -289,6 +311,13 @@
     "upcomingActivities": "Actividades proximas"
   },
   "iot": {
+    "apiKeyGenerate": "Clave de API",
+    "apiKeyTitle": "Clave de API del dispositivo",
+    "apiKeyConfirm": "Se generara una clave nueva para {name}. La clave anterior dejara de funcionar. Quieres continuar?",
+    "apiKeyOnce": "Copia esta clave ahora: no se mostrara de nuevo.",
+    "apiKeyHeader": "El dispositivo la envia en el encabezado {header} al registrar lecturas.",
+    "apiKeyCopy": "Copiar clave",
+    "apiKeyCopied": "Clave copiada",
     "title": "Dispositivos IoT",
     "subtitle": "Lecturas basicas de sensores asociados a fincas o animales de ganado.",
     "new": "Agregar dispositivo",

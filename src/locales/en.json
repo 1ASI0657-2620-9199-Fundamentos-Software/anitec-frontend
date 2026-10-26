@@ -18,6 +18,7 @@
     "subscriptions": "Plans",
     "clients": "Clients",
     "patients": "Patients",
+    "requests": "Requests",
     "about": "About"
   },
   "home": {
@@ -249,6 +250,27 @@
     "herd": "Herd",
     "location": "Location"
   },
+  "requests": {
+    "chip": "Access to your data",
+    "title": "Veterinarian requests",
+    "subtitle": "Decide which veterinarians can see your farms, animals and clinical history. Without your approval they see nothing.",
+    "veterinarian": "Veterinarian",
+    "requestedOn": "Requested on {date}",
+    "acceptedOn": "Approved on {date}",
+    "status": {
+      "Pending": "Pending",
+      "Accepted": "Approved",
+      "Rejected": "Rejected"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "revoke": "Revoke access",
+    "empty": "You have not received veterinarian requests.",
+    "sent": "Request sent. The rancher must approve it before you can see any data.",
+    "waiting": "Waiting for approval",
+    "pendingTitle": "Requests waiting for approval",
+    "cancel": "Cancel request"
+  },
   "finance": {
     "title": "Financial management",
     "new": "New transaction",
@@ -289,6 +311,13 @@
     "upcomingActivities": "Upcoming activities"
   },
   "iot": {
+    "apiKeyGenerate": "API key",
+    "apiKeyTitle": "Device API key",
+    "apiKeyConfirm": "A new key will be generated for {name}. The previous key will stop working. Do you want to continue?",
+    "apiKeyOnce": "Copy this key now: it will not be shown again.",
+    "apiKeyHeader": "The device sends it in the {header} header when it reports readings.",
+    "apiKeyCopy": "Copy key",
+    "apiKeyCopied": "Key copied",
     "title": "IoT devices",
     "subtitle": "Basic readings from sensors linked to farms or livestock animals.",
     "new": "Add device",
