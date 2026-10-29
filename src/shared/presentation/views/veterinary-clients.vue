@@ -155,7 +155,7 @@ const alertSeverity = (clientId) => {
         <p>{{ t("veterinary.clientsSubtitle") }}</p>
       </div>
       <pv-button
-        label="Agregar cliente"
+        :label="t('requests.inviteRancher')"
         icon="pi pi-user-plus"
         @click="router.push('/veterinary/add-client')"
       />

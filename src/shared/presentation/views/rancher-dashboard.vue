@@ -8,7 +8,7 @@ import useFinancialStore from "../../../financial/application/financial.store.js
 import useActivitiesStore from "../../../activities/application/activities.store.js";
 import useIamStore from "../../../iam/application/iam.store.js";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const router = useRouter();
 
@@ -24,7 +24,28 @@ const iam = useIamStore();
 
 const selectedHerdId = ref("all");
 
+/**
+ * Formats the date of an invitation using the active language.
+ * @param {string} value ISO date.
+ * @returns {string}
+ */
+const formatDate = (value) => {
+  if (!value) return "";
+
+  const tag = locale.value === "es" ? "es-PE" : "en-US";
+  return new Date(value).toLocaleDateString(tag);
+};
+
+/** The rancher accepts an invitation: the veterinarian can then see the rancher data. */
+const acceptInvitation = (invitation) =>
+  iam.approveVeterinarianRequest(invitation.veterinarianId);
+
+/** The rancher declines an invitation: the veterinarian sees nothing. */
+const declineInvitation = (invitation) =>
+  iam.rejectVeterinarianRequest(invitation.veterinarianId);
+
 onMounted(() => {
+  iam.fetchRancherRequests();
   if (!livestock.loaded) livestock.fetchAnimals();
   if (!livestock.herds.length) livestock.fetchHerds();
   if (!sanitary.loaded) sanitary.fetchHealthEvents();
@@ -208,6 +229,68 @@ const animalSeverity = (status) => {
           outlined
           @click="router.push('/activities/calendar/new')"
         />
+      </div>
+    </section>
+
+    <section
+      v-if="iam.pendingInvitations.length"
+      class="panel invitations-panel"
+      aria-live="polite"
+    >
+      <div class="panel-header">
+        <div>
+          <span class="section-chip">{{ t("requests.dashboardChip") }}</span>
+          <h3>
+            {{ t("requests.dashboardTitle", { count: iam.pendingInvitations.length }) }}
+          </h3>
+          <p>{{ t("requests.dashboardSubtitle") }}</p>
+        </div>
+        <pv-button
+          :label="t('requests.viewAll')"
+          icon="pi pi-list"
+          severity="secondary"
+          outlined
+          @click="router.push('/rancher/veterinarian-requests')"
+        />
+      </div>
+
+      <div class="assigned-client-grid">
+        <article
+          v-for="invitation in iam.pendingInvitations"
+          :key="invitation.id"
+          class="assigned-client-card"
+        >
+          <header>
+            <div>
+              <span>{{ t("requests.veterinarian") }}</span>
+              <h3>{{ invitation.veterinarianName }}</h3>
+            </div>
+            <pv-tag :value="t('requests.status.Pending')" severity="warn" />
+          </header>
+
+          <dl>
+            <div>
+              <dt>
+                {{ t("requests.requestedOn", { date: formatDate(invitation.requestedAt) }) }}
+              </dt>
+            </div>
+          </dl>
+
+          <footer>
+            <pv-button
+              :label="t('requests.approve')"
+              icon="pi pi-check"
+              @click="acceptInvitation(invitation)"
+            />
+            <pv-button
+              :label="t('requests.reject')"
+              icon="pi pi-times"
+              severity="danger"
+              outlined
+              @click="declineInvitation(invitation)"
+            />
+          </footer>
+        </article>
       </div>
     </section>
 

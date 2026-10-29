@@ -83,7 +83,7 @@ const routes = [
         path: "/veterinary/add-client",
         name: "veterinary-add-client",
         component: veterinaryAddClient,
-        meta: { title: "Agregar cliente", roles: ["veterinarian"] },
+        meta: { titleKey: "veterinary.addClientTitle", roles: ["veterinarian"] },
     },
     {
         path: "/veterinary/patients",
