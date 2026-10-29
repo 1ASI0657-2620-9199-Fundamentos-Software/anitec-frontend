@@ -43,29 +43,15 @@ const ranchers = computed(() => {
 });
 
 /**
- * Filters ranchers by name or by their farm names.
+ * Filters ranchers by name. The farms of a rancher are not visible until the rancher accepts the invitation.
  */
 const filteredRanchers = computed(() => {
   const term = search.value.trim().toLowerCase();
   if (!term) return ranchers.value;
 
-  const results = [];
-
-  ranchers.value.forEach((rancher) => {
-    const herdNames = [];
-
-    livestock.getHerdsByOwnerId(rancher.id).forEach((herd) => {
-      herdNames.push(herd.name);
-    });
-
-    const text = `${rancher.fullName} ${herdNames.join(" ")}`.toLowerCase();
-
-    if (text.includes(term)) {
-      results.push(rancher);
-    }
-  });
-
-  return results;
+  return ranchers.value.filter((rancher) =>
+    rancher.fullName.toLowerCase().includes(term),
+  );
 });
 
 /**
@@ -91,23 +77,19 @@ const initials = (name) => {
 const isAssignedToCurrentVet = (rancher) =>
   Number(rancher.veterinarianId) === Number(iam.currentUserId);
 
-const herdsByRancher = (rancherId) => livestock.getHerdsByOwnerId(rancherId);
+const herdCountByRancher = (rancher) => rancher.herdCount ?? 0;
 
-const animalCountByRancher = (rancher) => {
-  if (rancher.animalCount !== undefined) return rancher.animalCount;
-
-  return livestock.getAnimalsByOwnerId(rancher.id).length;
-};
+const animalCountByRancher = (rancher) => rancher.animalCount ?? 0;
 
 /**
- * Adds a rancher to the veterinarian portfolio.
+ * Invites a rancher to become a client. The rancher must accept the invitation.
  * @param {Object} rancher Selected rancher.
  */
 const sendRequest = async (rancher) => {
   const assigned = await iam.assignRancherToVeterinarian(rancher.id);
 
   if (assigned) {
-    requestNotice.value = t("requests.sent");
+    requestNotice.value = t("requests.sent", { name: rancher.fullName });
     availableRanchers.value = await iam.fetchAvailableRanchers();
   }
 };
@@ -132,6 +114,7 @@ const sendRequest = async (rancher) => {
 
     <p v-if="requestNotice" class="empty-state" role="status">
       {{ requestNotice }}
+      <router-link to="/veterinary/clients">{{ t("requests.viewSent") }}</router-link>
     </p>
 
     <div class="client-discovery-toolbar">
@@ -158,19 +141,10 @@ const sendRequest = async (rancher) => {
           <div>
             <h3>{{ rancher.fullName }}</h3>
             <span
-              >{{ herdsByRancher(rancher.id).length }} {{ t("veterinary.farms").toLowerCase() }} -
+              >{{ herdCountByRancher(rancher) }} {{ t("veterinary.farms").toLowerCase() }} -
               {{ animalCountByRancher(rancher) }} {{ t("veterinary.animals").toLowerCase() }}</span
             >
           </div>
-        </div>
-
-        <div class="farm-chip-list">
-          <span v-for="herd in herdsByRancher(rancher.id)" :key="herd.id">{{
-            herd.name
-          }}</span>
-          <span v-if="!herdsByRancher(rancher.id).length"
-            >{{ t("veterinary.noFarms") }}</span
-          >
         </div>
 
         <footer>
@@ -181,7 +155,7 @@ const sendRequest = async (rancher) => {
           />
           <pv-button
             v-else
-            :label="t('veterinary.addClient')"
+            :label="t('requests.invite')"
             icon="pi pi-send"
             @click="sendRequest(rancher)"
           />

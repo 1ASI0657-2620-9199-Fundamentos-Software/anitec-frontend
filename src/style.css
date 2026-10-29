@@ -483,6 +483,27 @@ p {
   color: var(--green-dark);
 }
 
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--brown);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.invitations-panel {
+  display: grid;
+  gap: 16px;
+  border-left: 4px solid var(--green-dark);
+}
+
 .workspace {
   position: relative;
   min-width: 0;

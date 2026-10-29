@@ -154,6 +154,13 @@ const useIamStore = defineStore("iam", () => {
     /** Requests a rancher received from veterinarians (any status). */
     const rancherRequests = ref([]);
 
+    /** Invitations that veterinarians sent to the current rancher and that wait for an answer. */
+    const pendingInvitations = computed(() =>
+        rancherRequests.value.filter(
+            (request) => String(request.status).toLowerCase() === "pending",
+        ),
+    );
+
     const users = computed(() => demoUsers.value);
 
     const isSignedIn = computed(() => {
@@ -394,6 +401,10 @@ const useIamStore = defineStore("iam", () => {
                 await fetchVeterinarianClients(user.id);
             }
 
+            if (role === "rancher") {
+                await fetchRancherRequests(user.id);
+            }
+
             if (role === "rancher") router.push({ name: "rancher-dashboard" });
             if (role === "veterinarian")
                 router.push({ name: "veterinarian-dashboard" });
@@ -599,6 +610,7 @@ const useIamStore = defineStore("iam", () => {
         rejectVeterinarianRequest,
         pendingClients,
         rancherRequests,
+        pendingInvitations,
         signUp,
         signIn,
         signOut,

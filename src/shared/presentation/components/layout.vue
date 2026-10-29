@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import LanguageSwitcher from "./language-switcher.vue";
@@ -13,6 +13,16 @@ const route = useRoute();
 const drawer = ref(false);
 
 const iamStore = useIamStore();
+
+const invitationsPath = "/rancher/veterinarian-requests";
+
+/** Keeps the invitation counter of the rancher menu up to date. */
+const refreshInvitations = () => {
+  if (iamStore.currentRole === "rancher") iamStore.fetchRancherRequests();
+};
+
+onMounted(refreshInvitations);
+watch(() => route.path, refreshInvitations);
 
 const rancherItems = [
   {
@@ -148,6 +158,12 @@ const shellClass = computed(() => {
         >
           <i :class="item.icon"></i>
           <span>{{ t(item.label) }}</span>
+          <span
+            v-if="item.to === invitationsPath && iamStore.pendingInvitations.length"
+            class="nav-badge"
+            :aria-label="t('requests.pendingCount', { count: iamStore.pendingInvitations.length })"
+            >{{ iamStore.pendingInvitations.length }}</span
+          >
         </router-link>
       </nav>
     </aside>
@@ -187,6 +203,12 @@ const shellClass = computed(() => {
         >
           <i :class="item.icon"></i>
           <span>{{ t(item.label) }}</span>
+          <span
+            v-if="item.to === invitationsPath && iamStore.pendingInvitations.length"
+            class="nav-badge"
+            :aria-label="t('requests.pendingCount', { count: iamStore.pendingInvitations.length })"
+            >{{ iamStore.pendingInvitations.length }}</span
+          >
         </router-link>
       </nav>
     </pv-drawer>
