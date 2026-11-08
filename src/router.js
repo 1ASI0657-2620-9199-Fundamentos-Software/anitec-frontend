@@ -172,8 +172,8 @@ const routes = [
         name: "subscription-success",
         component: subscriptionSuccess,
         meta: {
-            title: "Pago confirmado",
-            titleKey: "subscriptions.successTitle",
+            title: "Resultado del pago",
+            titleKey: "subscriptions.resultTitle",
             roles: ["rancher", "veterinarian"],
         },
     },

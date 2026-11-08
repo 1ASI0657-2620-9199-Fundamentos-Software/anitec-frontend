@@ -68,9 +68,12 @@ const checkout = async (plan) => {
       {{ t("subscriptions.loading") }}
     </p>
 
-    <p v-if="subscriptions.errors.length" class="empty-state">
-      {{ t("subscriptions.connectionError") }}
-    </p>
+    <section v-if="subscriptions.errors.length" class="panel">
+      <p class="error-text" role="alert" data-test="subscriptions-error">
+        <i class="pi pi-exclamation-triangle"></i>
+        {{ t(`subscriptions.errors.${subscriptions.errorKind || "unknown"}`) }}
+      </p>
+    </section>
 
     <section class="record-card-grid">
       <article v-for="plan in subscriptions.plans" :key="plan.id" class="panel">
@@ -89,7 +92,6 @@ const checkout = async (plan) => {
         <div class="metric-card">
           <span>{{ t("subscriptions.monthlyPrice") }}</span>
           <strong>S/ {{ Number(plan.price).toFixed(2) }}</strong>
-          <small>{{ plan.stripePriceId }}</small>
         </div>
         <div class="form-actions" style="margin-top: 14px">
           <pv-button
