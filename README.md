@@ -41,19 +41,22 @@ CREATE DATABASE `anitec-platform`;
 
 ### 2. Levantar El Backend
 
-En una terminal:
+El frontend habla solo con el API Gateway. Los planes y los pagos los atiende un servicio aparte (`Anitec.Subscriptions`) y el resto, el core; el gateway reparte cada peticion. La forma recomendada es Docker Compose, que levanta MySQL, los dos servicios, el gateway y el balanceador:
 
 ```powershell
 cd C:\Users\melga\Desktop\TrabajoFinalAppWeb\anitec-backend
-dotnet run --project Anitec.Platform
+copy .env.example .env      # una sola vez; ajusta los valores (las claves de Stripe pueden quedar vacias)
+docker compose up --build
 ```
 
 El backend queda disponible en:
 
 ```text
-http://localhost:5191/api/v1
-http://localhost:5191/swagger
+http://localhost:8080/api/v1
+http://localhost:8080/gateway/status
 ```
+
+Si ejecutas solo el core con `dotnet run --project Anitec.Platform` (`http://localhost:5191/api/v1`), las rutas de planes y pagos no existen ahi: cambia temporalmente las dos URLs de `.env.development`.
 
 ### 3. Levantar El Frontend
 
@@ -71,11 +74,14 @@ El frontend queda disponible normalmente en:
 http://localhost:5173
 ```
 
-El archivo `.env.development` apunta al backend local:
+El archivo `.env.development` apunta al gateway local:
 
 ```text
-VITE_ANITEC_API_URL="http://localhost:5191/api/v1"
+VITE_ANITEC_API_URL="http://localhost:8080/api/v1"
+VITE_ANITEC_SERVER_URL="http://localhost:8080"
 ```
+
+`.env.production` sigue apuntando al backend de Render hasta que el gateway este desplegado. Los valores `VITE_*` se incrustan al compilar: al cambiar la URL hay que volver a construir y desplegar.
 
 Para validar el build:
 
@@ -169,7 +175,7 @@ Se configura en `src/i18n.js`, con textos en `src/locales/es.json` y `src/locale
 
 ### Axios
 
-Se usa en `src/shared/infrastructure/base-api.js`. Sirve para hacer peticiones HTTP al backend. La URL base se define en `.env.development` como `http://localhost:5191/api/v1`. El interceptor agrega el token JWT al header `Authorization`.
+Se usa en `src/shared/infrastructure/base-api.js`. Sirve para hacer peticiones HTTP al backend. La URL base (la del gateway) se define en `.env.development` como `http://localhost:8080/api/v1`. El interceptor agrega el token JWT al header `Authorization`.
 
 ### Chart.js
 

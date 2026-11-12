@@ -3,8 +3,12 @@ import { computed, ref } from "vue";
 import { SubscriptionsApi } from "../infrastructure/subscriptions-api.js";
 import { SubscriptionPlanAssembler } from "../infrastructure/subscription-plan.assembler.js";
 import { PaymentAssembler } from "../infrastructure/payment.assembler.js";
+import { classifyPaymentError } from "./payment-errors.js";
 
 const api = new SubscriptionsApi();
+
+const sleep = (milliseconds) =>
+    new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 /**
  * Store that manages plans, active subscriptions, and test payments.
@@ -19,6 +23,12 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
     const lastCheckout = ref(null);
 
     const errors = ref([]);
+
+    /** Key of `subscriptions.errors` for the last failure, or null when there is none. */
+    const errorKind = ref(null);
+
+    /** State of the confirmation of a payment: idle, confirming, confirmed, pending or failed. */
+    const confirmation = ref("idle");
 
     const loaded = ref(false);
 
@@ -38,18 +48,24 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
         return selectedPlan;
     });
 
+    function registerError(error, context) {
+        errors.value.push(error);
+        errorKind.value = classifyPaymentError(error, context);
+    }
+
     function fetchPlans() {
         loading.value = true;
+        errors.value = [];
+        errorKind.value = null;
         return api
             .getPlans()
             .then((response) => {
                 plans.value =
                     SubscriptionPlanAssembler.toEntitiesFromResponse(response);
                 loaded.value = true;
-                errors.value = [];
                 return plans.value;
             })
-            .catch((error) => errors.value.push(error))
+            .catch((error) => registerError(error, "load"))
             .finally(() => {
                 loading.value = false;
             });
@@ -63,7 +79,7 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
                 return response.data;
             })
             .catch((error) => {
-                if (error.response?.status !== 404) errors.value.push(error);
+                if (error.response?.status !== 404) registerError(error, "load");
                 activeSubscription.value = null;
                 return null;
             });
@@ -76,12 +92,13 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
                 payments.value = PaymentAssembler.toEntitiesFromResponse(response);
                 return payments.value;
             })
-            .catch((error) => errors.value.push(error));
+            .catch((error) => registerError(error, "load"));
     }
 
     function checkout(userId, plan) {
         loading.value = true;
         errors.value = [];
+        errorKind.value = null;
         return api
             .createStripeCheckout(plan.id)
             .then((response) => {
@@ -90,7 +107,7 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
                 return response.data;
             })
             .catch((error) => {
-                errors.value.push(error);
+                registerError(error, "checkout");
                 return null;
             })
             .finally(() => {
@@ -98,37 +115,60 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
             });
     }
 
-    function confirmCheckout(sessionId, userId) {
+    /**
+     * Confirms a payment after Stripe sends the user back to the success page. The webhook is the main way a payment
+     * is recorded; this call is the backup. Stripe can take a moment to mark the session as paid, so a "not paid yet"
+     * answer is retried a few times before the page tells the user that the payment is still in progress.
+     */
+    async function confirmCheckout(
+        sessionId,
+        userId,
+        { attempts = 5, delayMs = 2000 } = {},
+    ) {
         loading.value = true;
         errors.value = [];
-        return api
-            .confirmStripeCheckout(sessionId)
-            .then(async (response) => {
-                lastCheckout.value = response.data;
-                activeSubscription.value = response.data.subscription;
-                payments.value = [
-                    PaymentAssembler.toEntityFromResource(response.data.payment),
-                    ...payments.value.filter(
-                        (payment) =>
-                            payment.providerPaymentId !==
-                            response.data.payment.providerPaymentId,
-                    ),
-                ];
+        errorKind.value = null;
+        confirmation.value = "confirming";
 
-                if (userId) {
-                    await fetchActiveSubscription(userId);
-                    await fetchPayments(userId);
+        try {
+            for (let attempt = 1; attempt <= attempts; attempt++) {
+                try {
+                    const response = await api.confirmStripeCheckout(sessionId);
+                    lastCheckout.value = response.data;
+                    activeSubscription.value = response.data.subscription;
+                    payments.value = [
+                        PaymentAssembler.toEntityFromResource(
+                            response.data.payment,
+                        ),
+                        ...payments.value.filter(
+                            (payment) =>
+                                payment.providerPaymentId !==
+                                response.data.payment.providerPaymentId,
+                        ),
+                    ];
+
+                    if (userId) {
+                        await fetchActiveSubscription(userId);
+                        await fetchPayments(userId);
+                    }
+
+                    confirmation.value = "confirmed";
+                    return response.data;
+                } catch (error) {
+                    const kind = classifyPaymentError(error, "confirm");
+                    if (kind === "notPaid" && attempt < attempts) {
+                        await sleep(delayMs);
+                        continue;
+                    }
+                    registerError(error, "confirm");
+                    confirmation.value = kind === "notPaid" ? "pending" : "failed";
+                    return null;
                 }
-
-                return response.data;
-            })
-            .catch((error) => {
-                errors.value.push(error);
-                return null;
-            })
-            .finally(() => {
-                loading.value = false;
-            });
+            }
+            return null;
+        } finally {
+            loading.value = false;
+        }
     }
 
     return {
@@ -137,6 +177,8 @@ const useSubscriptionsStore = defineStore("subscriptions", () => {
         payments,
         lastCheckout,
         errors,
+        errorKind,
+        confirmation,
         loaded,
         loading,
         activePlan,

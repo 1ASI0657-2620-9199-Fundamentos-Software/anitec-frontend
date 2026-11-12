@@ -403,7 +403,25 @@
       "confirmedPayment": "Tu pago de prueba fue registrado correctamente.",
       "confirmationError": "No se pudo confirmar el pago con Stripe.",
       "missingSession": "No se encontro la sesion de pago.",
-      "backToPlans": "Volver a planes"
+      "backToPlans": "Volver a planes",
+      "resultTitle": "Resultado del pago",
+      "retry": "Intentar de nuevo",
+      "confirmedDetail": "Plan {plan} por S/ {amount}.",
+      "pendingTitle": "Pago en proceso",
+      "pendingSubtitle": "Stripe aun no marca el pago como completado. Cuando lo haga, tu suscripcion se registrara sola.",
+      "pendingMessage": "Todavia no vemos el pago. Puedes volver a intentarlo en unos segundos o revisar tu historial de pagos mas tarde.",
+      "failedTitle": "No pudimos confirmar el pago",
+      "failedSubtitle": "Si pagaste, no pagues otra vez: el pago se registrara cuando Stripe lo notifique o al intentar de nuevo.",
+      "errors": {
+        "serviceDown": "El servicio de pagos no esta disponible en este momento. El resto de AniTec sigue funcionando; intenta de nuevo en unos minutos.",
+        "unauthorized": "Tu sesion vencio. Inicia sesion de nuevo.",
+        "notConfigured": "Los pagos no estan configurados en este entorno.",
+        "providerFailed": "Stripe no respondio correctamente. Intenta de nuevo en unos minutos.",
+        "planNotFound": "El plan elegido ya no esta disponible.",
+        "sessionNotFound": "No encontramos esa sesion de pago en tu cuenta.",
+        "notPaid": "Stripe aun no registra el pago como completado.",
+        "unknown": "Ocurrio un error inesperado. Intenta de nuevo."
+      }
     },
   "page-not-found": {
     "title": "Pagina no encontrada",

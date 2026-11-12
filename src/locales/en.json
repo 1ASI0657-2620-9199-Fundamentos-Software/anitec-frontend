@@ -403,7 +403,25 @@
       "confirmedPayment": "Your test payment was registered successfully.",
       "confirmationError": "The Stripe payment could not be confirmed.",
       "missingSession": "No checkout session was found.",
-      "backToPlans": "Back to plans"
+      "backToPlans": "Back to plans",
+      "resultTitle": "Payment result",
+      "retry": "Try again",
+      "confirmedDetail": "Plan {plan} for S/ {amount}.",
+      "pendingTitle": "Payment in progress",
+      "pendingSubtitle": "Stripe has not marked the payment as completed yet. When it does, your subscription will be registered automatically.",
+      "pendingMessage": "We do not see the payment yet. You can try again in a few seconds or check your payment history later.",
+      "failedTitle": "We could not confirm the payment",
+      "failedSubtitle": "If you paid, do not pay again: the payment will be registered when Stripe notifies it or when you try again.",
+      "errors": {
+        "serviceDown": "The payment service is not available right now. The rest of AniTec keeps working; try again in a few minutes.",
+        "unauthorized": "Your session expired. Sign in again.",
+        "notConfigured": "Payments are not configured in this environment.",
+        "providerFailed": "Stripe did not answer correctly. Try again in a few minutes.",
+        "planNotFound": "The chosen plan is no longer available.",
+        "sessionNotFound": "We could not find that payment session in your account.",
+        "notPaid": "Stripe does not show the payment as completed yet.",
+        "unknown": "An unexpected error happened. Try again."
+      }
     },
   "page-not-found": {
     "title": "Page Not Found",
