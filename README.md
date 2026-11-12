@@ -81,7 +81,7 @@ VITE_ANITEC_API_URL="http://localhost:8080/api/v1"
 VITE_ANITEC_SERVER_URL="http://localhost:8080"
 ```
 
-`.env.production` sigue apuntando al backend de Render hasta que el gateway este desplegado. Los valores `VITE_*` se incrustan al compilar: al cambiar la URL hay que volver a construir y desplegar.
+`.env.production` apunta al gateway desplegado en Azure Container Apps. Los valores `VITE_*` se incrustan al compilar: al cambiar la URL hay que volver a construir y desplegar. El gateway solo responde a los origenes de su lista `Cors:AllowedOrigins` (el frontend de Render, GitHub Pages y `localhost:5173`).
 
 Para validar el build:
 
